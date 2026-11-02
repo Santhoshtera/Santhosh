@@ -1,6 +1,8 @@
 package com.santhosh.demo.service;
 
 import com.santhosh.demo.Entity.Employee;
+import com.santhosh.demo.exception.EmployeeAlreadyExistsException;
+import com.santhosh.demo.exception.ResourceNotFoundException;
 import com.santhosh.demo.model.EmployeeRequest;
 import com.santhosh.demo.repository.EmployeeRepository;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,13 @@ public class EmployeeService {
     // CREATE EMPLOYEE - POST
     public Employee createEmployee(EmployeeRequest request) {
 
+        // Check whether the email already exists
+        if (employeeRepository.existsByEmail(request.getEmail())) {
+            throw new EmployeeAlreadyExistsException(
+                    "Employee already exists with email: " + request.getEmail());
+        }
+
+        // Create a new employee
         Employee employee = new Employee();
 
         employee.setName(request.getName());
@@ -52,13 +61,13 @@ public class EmployeeService {
     }
 
     public Employee getEmployeeById(Long id) {
+
         return employeeRepository.findById(id)
                 .orElseThrow(() ->
-                        new ResponseStatusException(
-                                HttpStatus.NOT_FOUND,
-                                "Employee not found with ID: " + id
-                        ));
+                        new ResourceNotFoundException(
+                                "Employee", "id", id.toString()));
     }
+
 
     // UPDATE EMPLOYEE - PUT
     public Employee updateEmployee(Long id, EmployeeRequest request) {
@@ -113,5 +122,6 @@ public class EmployeeService {
 
         employeeRepository.delete(employee);
     }
+
 }
 
